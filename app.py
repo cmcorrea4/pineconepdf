@@ -15,7 +15,7 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 
 
 #pinecone.init(api_key=PINECONE_API_KEY)
-index_name = 'pdf-index'
+index_name = 'pdfprueba'
 dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
 metric = 'cosine'
 spec = {
