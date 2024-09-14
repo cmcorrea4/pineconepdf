@@ -31,7 +31,7 @@ os.environ['OPENAI_API_KEY'] =  OPENAI_API_KEY
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 # Cargar el índice Pinecone como almacén de vectores en Langchain
-vector_store = LangchainPinecone(index=index, embedding=embeddings, text_key='text')
+vector_store = PineconeVectorStore(index=index, embedding=embeddings, text_key='text')
 
 # Cargar la cadena de preguntas y respuestas
 #llm = OpenAI(openai_api_key=OPENAI_API_KEY)
