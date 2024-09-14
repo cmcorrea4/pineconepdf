@@ -7,7 +7,7 @@ from langchain.chains.question_answering import load_qa_chain
 from pinecone import ServerlessSpec
 from pinecone import Pinecone, ServerlessSpec
 from langchain.embeddings.openai import OpenAIEmbeddings
-
+from langchain.llms import OpenAI
 from pinecone import Pinecone, ServerlessSpec
 
 PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
@@ -23,7 +23,7 @@ spec = {"serverless": {"cloud": "aws","region": "us-east-1"}}
 pc.init(api_key=PINECONE_API_KEY, environment="us-east-1")
 
 # Conectar al índice pdfprueba2
-index_name = 'pdfprueba2'
+
 index = pc.Index(index_name)
 
 # Configura OpenAI para Langchain
@@ -34,14 +34,14 @@ embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 vector_store = LangchainPinecone(index=index, embedding=embeddings, text_key='text')
 
 # Cargar la cadena de preguntas y respuestas
-llm = OpenAI(openai_api_key=OPENAI_API_KEY)
-qa_chain = load_qa_chain(llm, chain_type="stuff")
+#llm = OpenAI(openai_api_key=OPENAI_API_KEY)
+
 
 # Interfaz de usuario de Streamlit
 st.title("Consulta en Base de Datos Vectorial con Langchain")
 
 # Entrada de texto para la consulta
-query_text = st.text_input("Escribe tu consulta:")
+query_text = st.text_area("Escribe tu consulta:")
 
 # Realizar la búsqueda cuando se presiona el botón
 if st.button("Buscar en la base de datos"):
@@ -49,6 +49,11 @@ if st.button("Buscar en la base de datos"):
         with st.spinner('Buscando...'):
             # Consultar el índice Pinecone con la pregunta
             docs = vector_store.similarity_search(query_text, top_k=5)
+            llm = ChatOpenAI(model_name='gpt-4o-mini')
+            qa_chain = load_qa_chain(llm, chain_type="stuff")
+
+
+            
 
             # Utilizar la cadena de Langchain para obtener una respuesta basada en los documentos
             if docs:
