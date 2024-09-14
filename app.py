@@ -10,7 +10,8 @@ OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 # Inicializa Pinecone (se ejecutará solo cuando se presione el botón)
 def init_pinecone():
-    pinecone.init(api_key=PINECONE_API_KEY, environment="us-east-1")
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    pc.init(api_key=PINECONE_API_KEY, environment="us-east-1")
 
     index_name = 'pdfprueba'
     dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
@@ -18,9 +19,9 @@ def init_pinecone():
 
     # Verifica si el índice ya existe, si no, lo crea
     if index_name not in pinecone.list_indexes():
-        pinecone.create_index(name=index_name, dimension=dimension, metric=metric)
+        pc.create_index(name=index_name, dimension=dimension, metric=metric)
 
-    return pinecone.Index(index_name)
+    return pc.Index(index_name)
 
 # Configura OpenAI
 openai.api_key = OPENAI_API_KEY
