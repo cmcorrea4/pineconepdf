@@ -9,10 +9,14 @@ PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
 OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 # Inicializa Pinecone
-pinecone.init(api_key=PINECONE_API_KEY)
+from pinecone import Pinecone, ServerlessSpec
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+
+
+#pinecone.init(api_key=PINECONE_API_KEY)
 index_name = 'pdf-index'
 if index_name not in pinecone.list_indexes():
-    pinecone.create_index(index_name, dimension=1536)  # Cambia la dimensión a 1536
+    pc.create_index(index_name, dimension=1536)  # Cambia la dimensión a 1536
 index = pinecone.Index(index_name)
 
 # Configura OpenAI
