@@ -11,7 +11,7 @@ OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 # Inicializa Pinecone
 from pinecone import Pinecone, ServerlessSpec
-pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+pc = Pinecone(api_key=PINECONE_API_KEY)
 
 
 #pinecone.init(api_key=PINECONE_API_KEY)
