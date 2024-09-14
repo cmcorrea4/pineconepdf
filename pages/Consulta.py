@@ -12,16 +12,42 @@ PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
 OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 
-user_question = st.text_area("Pregunta: ")
-if user_question:
-    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-    embeddings = OpenAIEmbeddings(model="text-embedding-ada-002 ")
-    vector_store = PineconeVectorStore(index="pdfprueba2", embedding=embeddings)
-   
+pinecone.init(api_key=PINECONE_API_KEY, environment="us-east-1")
 
-    docs = vector_store.similarity_search(user_question, 3)
-    llm = ChatOpenAI(model_name='gpt-4o-mini')
-    chain = load_qa_chain(llm, chain_type="stuff")
-    respuesta = chain.run(input_documents=docs, question=user_question)
+# Conectar al índice pdfprueba2
+index_name = 'pdfprueba2'
+index = pinecone.Index(index_name)
 
-    st.write(respuesta)
+# Configura OpenAI para Langchain
+openai.api_key = OPENAI_API_KEY
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+
+# Cargar el índice Pinecone como almacén de vectores en Langchain
+vector_store = LangchainPinecone(index=index, embedding=embeddings, text_key='text')
+
+# Cargar la cadena de preguntas y respuestas
+llm = OpenAI(openai_api_key=OPENAI_API_KEY)
+qa_chain = load_qa_chain(llm, chain_type="stuff")
+
+# Interfaz de usuario de Streamlit
+st.title("Consulta en Base de Datos Vectorial con Langchain")
+
+# Entrada de texto para la consulta
+query_text = st.text_input("Escribe tu consulta:")
+
+# Realizar la búsqueda cuando se presiona el botón
+if st.button("Buscar en la base de datos"):
+    if query_text:
+        with st.spinner('Buscando...'):
+            # Consultar el índice Pinecone con la pregunta
+            docs = vector_store.similarity_search(query_text, top_k=5)
+
+            # Utilizar la cadena de Langchain para obtener una respuesta basada en los documentos
+            if docs:
+                response = qa_chain.run(input_documents=docs, question=query_text)
+                st.subheader("Respuesta generada:")
+                st.write(response)
+            else:
+                st.write("No se encontraron resultados.")
+    else:
+        st.error("Por favor, ingresa una consulta antes de buscar.")
