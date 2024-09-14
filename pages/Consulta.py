@@ -14,7 +14,7 @@ OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 user_question = st.text_area("Pregunta: ")
 if user_question:
-    os.environ["OPENAI_API_KEY"] = API_KEY_DE_OPENAI
+    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
     embeddings = OpenAIEmbeddings(model="text-embedding-ada-002 ")
     vector_store = PineconeVectorStore(index="pdfprueba2", embedding=embeddings)
    
