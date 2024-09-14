@@ -8,6 +8,8 @@ from pinecone import ServerlessSpec
 from pinecone import Pinecone, ServerlessSpec
 from langchain.embeddings.openai import OpenAIEmbeddings
 
+from pinecone import Pinecone, ServerlessSpec
+
 PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
 OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
