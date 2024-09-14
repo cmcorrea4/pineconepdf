@@ -49,6 +49,13 @@ if st.button("Buscar en la base de datos"):
         with st.spinner('Buscando...'):
             # Consultar el índice Pinecone con la pregunta
             docs = vector_store.similarity_search(query_text)
+            for doc in docs:
+                if not doc.metadata:
+                    doc.metadata = {}  # Evitar errores si no hay metadatos
+                if 'text' not in doc.metadata:
+                    doc.metadata['text'] = f"Documento ID: {doc.id}"
+
+            
             llm = ChatOpenAI(model_name='gpt-4o-mini')
             qa_chain = load_qa_chain(llm, chain_type="stuff")
 
