@@ -16,9 +16,17 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 
 #pinecone.init(api_key=PINECONE_API_KEY)
 index_name = 'pdf-index'
+dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
+metric = 'cosine'
+spec = {
+    "serverless": {
+        "cloud": "aws",
+        "region": "us-east-1"
+    }
+}
 if index_name not in pc.list_indexes():
-    pc.create_index(index_name)  # Cambia la dimensión a 1536
-index = pinecone.Index(index_name)
+    pc.create_index(name=index_name, dimension=dimension, metric=metric, spec=spec)
+index = pc.Index(index_name)
 
 # Configura OpenAI
 openai.api_key = OPENAI_API_KEY
