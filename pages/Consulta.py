@@ -12,9 +12,9 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 
 user_question = st.text_area("Pregunta: ")
 if user_question:
-    os.environ["OPENAI_API_KEY"] = ke2
+    os.environ["OPENAI_API_KEY"] = API_KEY_DE_OPENAI
     embeddings = OpenAIEmbeddings(model="text-embedding-ada-002 ")
-    vector_store = PineconeVectorStore(index="langchain-test-index", embedding=embeddings)
+    vector_store = PineconeVectorStore(index="pdfprueba2", embedding=embeddings)
    
 
     docs = vector_store.similarity_search(user_question, 3)
