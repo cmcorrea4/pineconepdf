@@ -22,7 +22,7 @@ def extract_text_from_pdf(pdf_file):
     reader = PyPDF2.PdfReader(pdf_file)
     text = ''
     for page_num in range( len(reader.pages)):
-        page = reader.getPage(page_num)
+        page = reader.pages[page_number]
         text += page.extract_text()
     return text
 
