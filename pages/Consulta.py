@@ -12,15 +12,10 @@ PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
 OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
-    index_name = 'pdfprueba2'
-    dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
-    metric = 'cosine'
-    spec = {
-        "serverless": {
-           "cloud": "aws",
-           "region": "us-east-1"
-         }
-    }
+index_name = 'pdfprueba2'
+dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
+metric = 'cosine'
+spec = {"serverless": {"cloud": "aws","region": "us-east-1"}}
 
 
 pc.init(api_key=PINECONE_API_KEY, environment="us-east-1")
