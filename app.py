@@ -16,7 +16,7 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 
 #pinecone.init(api_key=PINECONE_API_KEY)
 index_name = 'pdf-index'
-if index_name not in pinecone.list_indexes():
+if index_name not in pc.list_indexes():
     pc.create_index(index_name, dimension=1536)  # Cambia la dimensión a 1536
 index = pinecone.Index(index_name)
 
