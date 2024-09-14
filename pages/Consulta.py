@@ -48,7 +48,7 @@ if st.button("Buscar en la base de datos"):
     if query_text:
         with st.spinner('Buscando...'):
             # Consultar el índice Pinecone con la pregunta
-            docs = vector_store.similarity_search(query_text, top_k=5)
+            docs = vector_store.similarity_search(query_text)
             llm = ChatOpenAI(model_name='gpt-4o-mini')
             qa_chain = load_qa_chain(llm, chain_type="stuff")
 
