@@ -20,7 +20,7 @@ metric = 'cosine'
 spec = {"serverless": {"cloud": "aws","region": "us-east-1"}}
 
 
-pc.init(api_key=PINECONE_API_KEY, environment="us-east-1")
+#pc.init(api_key=PINECONE_API_KEY, environment="us-east-1")
 
 # Conectar al índice pdfprueba2
 
