@@ -27,7 +27,7 @@ spec = {"serverless": {"cloud": "aws","region": "us-east-1"}}
 index = pc.Index(index_name)
 
 # Configura OpenAI para Langchain
-os.environ['OPENAI_API_KEY'] = = OPENAI_API_KEY
+os.environ['OPENAI_API_KEY'] =  OPENAI_API_KEY
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 # Cargar el índice Pinecone como almacén de vectores en Langchain
