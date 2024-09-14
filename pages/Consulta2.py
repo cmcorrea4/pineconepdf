@@ -14,7 +14,7 @@ os.environ["OPENAI_API_KEY"] = st.secrets['API_KEY_DE_OPENAI']
 os.environ["PINECONE_API_KEY"] = st.secrets['API_KEY_DE_PINECONE']
 #os.environ["PINECONE_ENV"] = st.secrets["PINECONE_ENV"]
 
-pc = Pinecone(api_key=st.secrets['API_KEY_DE_OPENAI'])
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
 index_name = 'pdfprueba2'
 dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
 metric = 'cosine'
