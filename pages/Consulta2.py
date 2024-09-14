@@ -7,9 +7,13 @@ from langchain.chains.question_answering import load_qa_chain
 import pinecone
 
 # Configurar las credenciales (asegúrate de tener estas variables de entorno configuradas)
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-os.environ["PINECONE_API_KEY"] = st.secrets["PINECONE_API_KEY"]
-os.environ["PINECONE_ENV"] = st.secrets["PINECONE_ENV"]
+os.environ["OPENAI_API_KEY"] = st.secrets['API_KEY_DE_OPENAI']
+os.environ["PINECONE_API_KEY"] = st.secrets['API_KEY_DE_PINECONE']
+#os.environ["PINECONE_ENV"] = st.secrets["PINECONE_ENV"]
+
+PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
+OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
+
 
 # Inicializar Pinecone
 pinecone.init(
