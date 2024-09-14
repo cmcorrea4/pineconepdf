@@ -1,0 +1,10 @@
+openai==0.28.1
+#langchain
+langchain-pinecone
+langchain-community
+streamlit==1.28.0
+pypdf==3.16.4
+pinecone-client
+pinecone-notebooks
+sentence-transformers==2.2.2
+tiktoken
