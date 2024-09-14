@@ -3,7 +3,6 @@ import pinecone
 import openai
 import PyPDF2
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import os
 
 # Configura tu API key de Pinecone y OpenAI
 PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
@@ -13,8 +12,6 @@ OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 from pinecone import Pinecone, ServerlessSpec
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-
-#pinecone.init(api_key=PINECONE_API_KEY)
 index_name = 'pdfprueba'
 dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
 metric = 'cosine'
@@ -24,6 +21,8 @@ spec = {
         "region": "us-east-1"
     }
 }
+
+# Crear el índice solo si no existe
 if index_name not in pc.list_indexes():
     pc.create_index(name=index_name, dimension=dimension, metric=metric, spec=spec)
 index = pc.Index(index_name)
@@ -64,5 +63,8 @@ pdf_file = st.file_uploader("Sube tu archivo PDF", type="pdf")
 if pdf_file is not None:
     text = extract_text_from_pdf(pdf_file)
     chunks = split_text(text)
-    save_to_pinecone(chunks)
-    st.success("El archivo PDF ha sido procesado y almacenado en la base de datos vectorial.")
+    
+    # Botón para cargar el contenido a Pinecone
+    if st.button("Cargar a la base de datos"):
+        save_to_pinecone(chunks)
+        st.success("El archivo PDF ha sido procesado y almacenado en la base de datos vectorial.")
