@@ -12,7 +12,7 @@ OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 from pinecone import Pinecone, ServerlessSpec
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-index_name = 'pdfprueba'
+index_name = 'pdfprueba2'
 dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
 metric = 'cosine'
 spec = {
