@@ -11,22 +11,7 @@ OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
 # Inicializa Pinecone
 from pinecone import Pinecone, ServerlessSpec
-pc = Pinecone(api_key=PINECONE_API_KEY)
 
-
-#pinecone.init(api_key=PINECONE_API_KEY)
-index_name = 'pdfprueba'
-dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
-metric = 'cosine'
-spec = {
-    "serverless": {
-        "cloud": "aws",
-        "region": "us-east-1"
-    }
-}
-if index_name not in pc.list_indexes():
-    pc.create_index(name=index_name, dimension=dimension, metric=metric, spec=spec)
-index = pc.Index(index_name)
 
 # Configura OpenAI
 openai.api_key = OPENAI_API_KEY
@@ -66,6 +51,19 @@ if pdf_file is not None:
     chunks = split_text(text)
 
 if st.button("Cargar a la base de datos"):
-        save_to_pinecone(chunks)
-        st.success("El archivo PDF ha sido procesado y almacenado en la base de datos vectorial.")
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    index_name = 'pdfprueba2'
+    dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
+    metric = 'cosine'
+    spec = {
+        "serverless": {
+           "cloud": "aws",
+           "region": "us-east-1"
+         }
+    }
+    if index_name not in pc.list_indexes():
+       pc.create_index(name=index_name, dimension=dimension, metric=metric, spec=spec)
+       index = pc.Index(index_name)
+    save_to_pinecone(chunks)
+    st.success("El archivo PDF ha sido procesado y almacenado en la base de datos vectorial.")
 
