@@ -1,3 +1,14 @@
+import streamlit as st
+import pinecone
+import os
+from langchain_pinecone import PineconeVectorStore
+from langchain.chat_models import ChatOpenAI
+from langchain.chains.question_answering import load_qa_chain
+from pinecone import ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec
+from langchain.embeddings.openai import OpenAIEmbeddings
+
+
 
 user_question = st.text_input("Pregunta: ")
         if user_question:
