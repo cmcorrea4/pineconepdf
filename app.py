@@ -3,6 +3,7 @@ import pinecone
 import openai
 import PyPDF2
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import os
 
 # Configura tu API key de Pinecone y OpenAI
 PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
