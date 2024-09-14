@@ -11,12 +11,23 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
 OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
 
+pc = Pinecone(api_key=PINECONE_API_KEY)
+    index_name = 'pdfprueba2'
+    dimension = 1536  # Ajusta la dimensión según tu modelo de embeddings
+    metric = 'cosine'
+    spec = {
+        "serverless": {
+           "cloud": "aws",
+           "region": "us-east-1"
+         }
+    }
 
-pinecone.init(api_key=PINECONE_API_KEY, environment="us-east-1")
+
+pc.init(api_key=PINECONE_API_KEY, environment="us-east-1")
 
 # Conectar al índice pdfprueba2
 index_name = 'pdfprueba2'
-index = pinecone.Index(index_name)
+index = pc.Index(index_name)
 
 # Configura OpenAI para Langchain
 openai.api_key = OPENAI_API_KEY
