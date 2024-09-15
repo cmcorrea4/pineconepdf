@@ -52,8 +52,9 @@ if st.button("Buscar en la base de datos"):
             docs = vector_store.similarity_search(query_text,k=1)
             llm = ChatOpenAI(model_name='gpt-4o-mini',temperature=0.0)
             qa_chain = load_qa_chain(llm, chain_type="stuff")
-
-
+            qa = RetrievalQA.from_chain_type(llm=llm,chain_type="stuff",retriever=vectorstore.as_retriever())  
+            response=qa.invoke(query_text)
+            st.write(response)
             
 
             # Utilizar la cadena de Langchain para obtener una respuesta basada en los documentos
