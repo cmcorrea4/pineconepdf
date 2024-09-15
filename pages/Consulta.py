@@ -65,5 +65,5 @@ if st.button("Buscar en la base de datos"):
             #   st.write(response)
             #else:
             #    st.write("No se encontraron resultados.")
-   else:
-        st.error("Por favor, ingresa una consulta antes de buscar.")
+  # else:
+   #     st.error("Por favor, ingresa una consulta antes de buscar.")
