@@ -49,8 +49,8 @@ if st.button("Buscar en la base de datos"):
     if query_text:
         with st.spinner('Buscando...'):
             # Consultar el índice Pinecone con la pregunta
-            query_embedding = embeddings.embed_query(query_text)
-            docs = vector_store.similarity_search(query_embedding,k=2)
+            
+            docs = vector_store.similarity_search(query_text,k=2)
             llm = ChatOpenAI(model_name='gpt-4o-mini',temperature=0.0)
             #qa_chain = load_qa_chain(llm, chain_type="stuff")
             qa = RetrievalQA.from_chain_type(llm=llm,chain_type="stuff",retriever=vectorstore.as_retriever())  
@@ -59,10 +59,10 @@ if st.button("Buscar en la base de datos"):
             
 
             # Utilizar la cadena de Langchain para obtener una respuesta basada en los documentos
-            if docs:
-                response = qa_chain.run(input_documents=docs, question=query_text)
-                st.subheader("Respuesta generada:")
-                st.write(response)
+            #if docs:
+            #    response = qa_chain.run(input_documents=docs, question=query_text)
+            #    st.subheader("Respuesta generada:")
+            #   st.write(response)
             else:
                 st.write("No se encontraron resultados.")
     else:
