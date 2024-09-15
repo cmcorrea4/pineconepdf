@@ -63,7 +63,7 @@ if st.button("Buscar en la base de datos"):
             #    response = qa_chain.run(input_documents=docs, question=query_text)
             #    st.subheader("Respuesta generada:")
             #   st.write(response)
-            else:
-                st.write("No se encontraron resultados.")
+            #else:
+            #    st.write("No se encontraron resultados.")
     else:
         st.error("Por favor, ingresa una consulta antes de buscar.")
