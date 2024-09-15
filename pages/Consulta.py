@@ -9,6 +9,7 @@ from pinecone import Pinecone, ServerlessSpec
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.llms import OpenAI
 from pinecone import Pinecone, ServerlessSpec
+from langchain.chains import RetrievalQA
 
 PINECONE_API_KEY = st.secrets['API_KEY_DE_PINECONE']
 OPENAI_API_KEY = st.secrets['API_KEY_DE_OPENAI']
@@ -48,15 +49,8 @@ if st.button("Buscar en la base de datos"):
     if query_text:
         with st.spinner('Buscando...'):
             # Consultar el índice Pinecone con la pregunta
-            docs = vector_store.similarity_search(query_text)
-            for doc in docs:
-                if not doc.metadata:
-                    doc.metadata = {}  # Evitar errores si no hay metadatos
-                if 'text' not in doc.metadata:
-                    doc.metadata['text'] = f"Documento ID: {doc.id}"
-
-            
-            llm = ChatOpenAI(model_name='gpt-4o-mini')
+            docs = vector_store.similarity_search(query_text,k=1)
+            llm = ChatOpenAI(model_name='gpt-4o-mini',temperature=0.0)
             qa_chain = load_qa_chain(llm, chain_type="stuff")
 
 
