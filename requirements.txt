@@ -1,6 +1,6 @@
 openai==0.28.1
 #langchain
-langchain-pinecone
+langchain-pinecone==0.1.3.
 langchain-community
 streamlit==1.28.0
 #pypdf==3.16.4
