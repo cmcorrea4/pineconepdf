@@ -110,10 +110,31 @@ def initialize_rag_system():
         
         # Inicializar embeddings y modelo
         st.write("Inicializando modelos...")
-        embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
+        embedding_model = OpenAIEmbeddings(
+            openai_api_key=openai_api_key,
+            model="text-embedding-3-small"
+        )
+        
+        # Verificar dimensiones del embedding
+        st.write("Verificando dimensiones del embedding...")
+        test_embed = embedding_model.embed_query("test")
+        st.write(f"Dimensiones del embedding: {len(test_embed)}")
+        
+        # Obtener información del índice
+        pc = Pinecone(api_key=pinecone_api_key)
+        index = pc.Index(selected_index)
+        index_info = index.describe_index_stats()
+        st.write("Información del índice:", index_info)
+        
+        # Verificar que las dimensiones coincidan
+        if 'dimension' in index_info:
+            st.write(f"Dimensiones del índice: {index_info['dimension']}")
+            if len(test_embed) != index_info['dimension']:
+                raise Exception(f"Las dimensiones no coinciden: Embedding ({len(test_embed)}) ≠ Índice ({index_info['dimension']})")
+        
         llm = ChatOpenAI(
             temperature=0,
-            model_name="text-embedding-3-small",
+            model_name="gpt-3.5-turbo",
             openai_api_key=openai_api_key
         )
         
