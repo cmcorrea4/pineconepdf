@@ -3,7 +3,7 @@ import pinecone
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
-from langchain_community.vectorstores import Pinecone
+from langchain_pinecone import PineconeVectorStore
 import os
 
 # Configuración de la página
@@ -58,17 +58,16 @@ def initialize_rag_system():
             api_key=pinecone_api_key,
             environment=pinecone_env
         )
-        index = pinecone.Index(index_name)
         
         # Inicializar embeddings y modelo
         embeddings = OpenAIEmbeddings()
         llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
         
         # Crear vectorstore
-        vectorstore = Pinecone(
-            index,
-            embeddings.embed_query,
-            "text"
+        vectorstore = PineconeVectorStore(
+            index_name=index_name,
+            embedding=embeddings,
+            text_key="text"
         )
         
         # Crear chain
