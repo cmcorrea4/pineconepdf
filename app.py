@@ -15,11 +15,14 @@ st.title("Sistema de Preguntas y Respuestas con RAG")
 def get_pinecone_indexes(api_key):
     try:
         pc = Pinecone(api_key=api_key)
-        indexes = pc.list_indexes().names()
-        return list(indexes)
+        indexes = list(pc.list_indexes().names())
+        # Asegurar que 'plastico' siempre esté en la lista
+        if 'plastico' not in indexes:
+            indexes.append('plastico')
+        return indexes
     except Exception as e:
         st.error(f"Error al obtener índices: {str(e)}")
-        return []
+        return ['plastico']  # Retornar al menos 'plastico' si hay error
 
 # Inicializar variables de estado si no existen
 if 'last_refresh' not in st.session_state:
@@ -88,11 +91,17 @@ with st.sidebar:
             st.error(f"Error al crear el índice: {str(e)}")
     
     # Selector de índice
-    if pinecone_api_key and st.session_state.available_indexes:
+    if pinecone_api_key:
         st.markdown("### Índices Disponibles")
+        # Asegurar que 'plastico' esté en la lista
+        all_indexes = list(st.session_state.available_indexes)
+        if 'plastico' not in all_indexes:
+            all_indexes.append('plastico')
+        
         st.session_state.selected_index = st.selectbox(
             "Selecciona un índice",
-            options=st.session_state.available_indexes,
+            options=all_indexes,
+            index=all_indexes.index('plastico') if 'plastico' in all_indexes else 0,
             help="Selecciona el índice de Pinecone que quieres usar"
         )
         st.info(f"Índice seleccionado: {st.session_state.selected_index}")
