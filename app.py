@@ -149,12 +149,27 @@ def initialize_rag_system():
         if stats['total_vector_count'] == 0:
             raise Exception("El índice está vacío. No hay documentos para buscar.")
         
-        # Crear vector store
-        st.write("Configurando vector store...")
+        # Probar búsqueda directa en Pinecone
+        st.write("Probando búsqueda directa en Pinecone...")
+        test_query = "test query"
+        query_embedding = embedding_model.embed_query(test_query)
+        
+        # Realizar búsqueda directa en el índice
+        search_response = index.query(
+            namespace="Interfaces Multimodales y sus apps",
+            vector=query_embedding,
+            top_k=3,
+            include_metadata=True
+        )
+        
+        st.write("Resultados de búsqueda directa:", search_response)
+        
+        # Crear vector store después de la prueba
         vectorstore = PineconeVectorStore(
             index=index,
             embedding=embedding_model,
-            text_key="text"
+            text_key="text",
+            namespace="Interfaces Multimodales y sus apps"  # Agregar namespace específico
         )
         
         # Probar una búsqueda simple para verificar la recuperación
