@@ -125,11 +125,6 @@ def initialize_rag_system():
         if not st.session_state.selected_index:
             raise Exception("Por favor, selecciona un índice válido.")
             
-        # Verificar que el índice existe
-        pc = Pinecone(api_key=pinecone_api_key)
-        if st.session_state.selected_index not in pc.list_indexes().names():
-            raise Exception(f"El índice '{st.session_state.selected_index}' no existe.")
-        
         # Inicializar embeddings y modelo
         embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
         llm = ChatOpenAI(
@@ -138,10 +133,25 @@ def initialize_rag_system():
             openai_api_key=openai_api_key
         )
         
-        # Crear vector store con el índice existente
-        vectorstore = PineconeVectorStore.from_existing_index(
-            index_name=st.session_state.selected_index,
-            embedding=embedding_model
+        # Inicializar Pinecone y el índice
+        pc = Pinecone(api_key=pinecone_api_key)
+        
+        # Verificar que el índice existe en la lista actual
+        available_indexes = pc.list_indexes().names()
+        st.write("Índices disponibles:", available_indexes)  # Debug
+        st.write("Índice seleccionado:", st.session_state.selected_index)  # Debug
+        
+        if st.session_state.selected_index not in available_indexes:
+            raise Exception(f"El índice '{st.session_state.selected_index}' no existe. Índices disponibles: {', '.join(available_indexes)}")
+        
+        # Obtener el índice
+        index = pc.Index(st.session_state.selected_index)
+        
+        # Crear vector store con el índice
+        vectorstore = PineconeVectorStore(
+            index=index,
+            embedding=embedding_model,
+            text_key="text"
         )
         
         # Crear el retriever
