@@ -108,7 +108,7 @@ def initialize_rag_system():
         embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
         llm = ChatOpenAI(
             temperature=0,
-            model_name="gpt-3.5-turbo",
+            model_name="gpt-4o-mini",
             openai_api_key=openai_api_key
         )
         
