@@ -1,5 +1,5 @@
 import streamlit as st
-from pinecone import Pinecone
+from pinecone import Pinecone, ServerlessSpec
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
@@ -28,11 +28,32 @@ with st.sidebar:
         help="Introduce tu API key de Pinecone"
     )
     
-    index_name = st.text_input(
-        "Nombre del Índice",
-        value="pdf-vector-store",
-        help="Introduce el nombre de tu índice en Pinecone"
-    )
+    # Inicializar Pinecone para obtener índices disponibles
+    if pinecone_api_key:
+        try:
+            pc = Pinecone(api_key=pinecone_api_key)
+            available_indexes = pc.list_indexes().names()
+            
+            # Mostrar índices disponibles o crear nuevo
+            st.markdown("### Índices Disponibles")
+            if available_indexes:
+                index_name = st.selectbox(
+                    "Selecciona un índice existente",
+                    options=available_indexes,
+                    help="Selecciona el índice de Pinecone que quieres usar"
+                )
+            else:
+                st.warning("No hay índices disponibles.")
+                index_name = st.text_input(
+                    "Nombre para el nuevo índice",
+                    value="pdf-vector-store",
+                    help="Introduce el nombre para crear un nuevo índice"
+                )
+        except Exception as e:
+            st.error(f"Error al conectar con Pinecone: {str(e)}")
+            index_name = None
+    else:
+        index_name = None
     
     # Botón para inicializar el sistema
     initialize_button = st.button("Inicializar Sistema")
@@ -59,10 +80,17 @@ def initialize_rag_system():
         
         # Si el índice no existe, lo creamos
         if index_name not in pc.list_indexes().names():
+            # Crear especificación para el índice
+            spec = ServerlessSpec(
+                cloud="aws",
+                region="us-west-2"
+            )
+            
             pc.create_index(
                 name=index_name,
                 dimension=1536,  # Dimensión para OpenAI embeddings
-                metric='cosine'
+                metric="cosine",
+                spec=spec
             )
         
         # Obtener el índice existente
@@ -92,7 +120,7 @@ def initialize_rag_system():
 
 # Manejar la inicialización del sistema
 if initialize_button:
-    if not openai_api_key or not pinecone_api_key:
+    if not openai_api_key or not pinecone_api_key or not index_name:
         st.error("Por favor, completa todos los campos de configuración.")
     else:
         try:
