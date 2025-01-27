@@ -1,5 +1,5 @@
 import streamlit as st
-import pinecone
+from pinecone import Pinecone
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
@@ -53,19 +53,17 @@ def initialize_rag_system():
         # Configurar OpenAI
         os.environ["OPENAI_API_KEY"] = openai_api_key
         
-        # Inicializar Pinecone
-        pinecone.init(
-            api_key=pinecone_api_key,
-            environment=pinecone_env
-        )
+        # Inicializar Pinecone con la nueva sintaxis
+        pc = Pinecone(api_key=pinecone_api_key)
         
         # Inicializar embeddings y modelo
         embeddings = OpenAIEmbeddings()
         llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
         
-        # Crear vectorstore
+        # Crear vectorstore con la nueva sintaxis
         vectorstore = PineconeVectorStore(
             index_name=index_name,
+            environment=pinecone_env,
             embedding=embeddings,
             text_key="text"
         )
