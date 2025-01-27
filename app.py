@@ -5,10 +5,21 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_pinecone import PineconeVectorStore
 import os
+import time
 
 # Configuración de la página
 st.set_page_config(page_title="RAG con Pinecone", layout="wide")
 st.title("Sistema de Preguntas y Respuestas con RAG")
+
+# Función para obtener índices
+def get_pinecone_indexes(api_key):
+    try:
+        pc = Pinecone(api_key=api_key)
+        indexes = pc.list_indexes().names()
+        return list(indexes)
+    except Exception as e:
+        st.error(f"Error al obtener índices: {str(e)}")
+        return []
 
 # Sidebar para configuración de credenciales
 with st.sidebar:
@@ -28,29 +39,65 @@ with st.sidebar:
         help="Introduce tu API key de Pinecone"
     )
     
-    # Inicializar Pinecone para obtener índices disponibles
-    if pinecone_api_key:
+    # Inicializar variables de estado si no existen
+    if 'last_refresh' not in st.session_state:
+        st.session_state.last_refresh = time.time()
+    if 'available_indexes' not in st.session_state:
+        st.session_state.available_indexes = []
+    
+    # Sección de gestión de índices
+    st.markdown("### Gestión de Índices")
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        refresh_button = st.button("🔄 Actualizar Índices")
+    
+    # Actualizar lista de índices cuando se presione el botón
+    if refresh_button and pinecone_api_key:
+        with st.spinner("Actualizando lista de índices..."):
+            st.session_state.available_indexes = get_pinecone_indexes(pinecone_api_key)
+            st.session_state.last_refresh = time.time()
+    
+    # Mostrar tiempo desde última actualización
+    st.caption(f"Última actualización: {int(time.time() - st.session_state.last_refresh)} segundos atrás")
+    
+    # Campo para nuevo índice
+    new_index_name = st.text_input(
+        "Crear nuevo índice",
+        help="Introduce el nombre para crear un nuevo índice"
+    )
+    
+    if st.button("Crear Índice") and new_index_name and pinecone_api_key:
         try:
             pc = Pinecone(api_key=pinecone_api_key)
-            available_indexes = pc.list_indexes().names()
+            spec = ServerlessSpec(cloud="aws", region="us-west-2")
             
-            # Mostrar índices disponibles o crear nuevo
-            st.markdown("### Índices Disponibles")
-            if available_indexes:
-                index_name = st.selectbox(
-                    "Selecciona un índice existente",
-                    options=available_indexes,
-                    help="Selecciona el índice de Pinecone que quieres usar"
+            with st.spinner("Creando nuevo índice..."):
+                pc.create_index(
+                    name=new_index_name,
+                    dimension=1536,
+                    metric="cosine",
+                    spec=spec
                 )
-            else:
-                st.warning("No hay índices disponibles.")
-                index_name = st.text_input(
-                    "Nombre para el nuevo índice",
-                    value="pdf-vector-store",
-                    help="Introduce el nombre para crear un nuevo índice"
-                )
+                st.success(f"Índice '{new_index_name}' creado correctamente!")
+                # Actualizar lista de índices
+                st.session_state.available_indexes = get_pinecone_indexes(pinecone_api_key)
         except Exception as e:
-            st.error(f"Error al conectar con Pinecone: {str(e)}")
+            st.error(f"Error al crear el índice: {str(e)}")
+    
+    # Selector de índice
+    if pinecone_api_key:
+        if not st.session_state.available_indexes:
+            st.session_state.available_indexes = get_pinecone_indexes(pinecone_api_key)
+        
+        if st.session_state.available_indexes:
+            index_name = st.selectbox(
+                "Selecciona un índice",
+                options=st.session_state.available_indexes,
+                help="Selecciona el índice de Pinecone que quieres usar"
+            )
+        else:
+            st.warning("No hay índices disponibles.")
             index_name = None
     else:
         index_name = None
@@ -75,27 +122,6 @@ def initialize_rag_system():
             openai_api_key=openai_api_key
         )
         
-        # Inicializar Pinecone y obtener el índice
-        pc = Pinecone(api_key=pinecone_api_key)
-        
-        # Si el índice no existe, lo creamos
-        if index_name not in pc.list_indexes().names():
-            # Crear especificación para el índice
-            spec = ServerlessSpec(
-                cloud="aws",
-                region="us-west-2"
-            )
-            
-            pc.create_index(
-                name=index_name,
-                dimension=1536,  # Dimensión para OpenAI embeddings
-                metric="cosine",
-                spec=spec
-            )
-        
-        # Obtener el índice existente
-        index = pc.Index(index_name)
-
         # Crear vector store con el índice existente
         vectorstore = PineconeVectorStore.from_existing_index(
             index_name=index_name,
