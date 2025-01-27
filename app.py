@@ -138,26 +138,26 @@ def initialize_rag_system():
         
         # Probar una búsqueda simple para verificar la recuperación
         st.write("Probando recuperación de documentos...")
-        retriever = vectorstore.as_retriever(
-            search_kwargs={
-                "k": 3,
-                "fetch_k": 10
-            }
-        )
-        
-        # Hacer una búsqueda de prueba
         test_query = "test query"
         st.write(f"Realizando búsqueda de prueba con: '{test_query}'")
         test_embedding = embedding_model.embed_query(test_query)
         st.write("✅ Embedding de prueba generado")
         
-        test_docs = retriever.get_relevant_documents(test_query)
+        st.write("Probando búsqueda directa en vectorstore...")
+        test_docs = vectorstore.similarity_search(
+            test_query,
+            k=3
+        )
         st.write(f"📄 Documentos recuperados en prueba: {len(test_docs)}")
         if len(test_docs) > 0:
             st.write("Ejemplo de documento recuperado:", test_docs[0].page_content[:200])
         
-        # Crear chain con configuración para depuración
-        st.write("Configurando chain de QA...")
+        # Crear retriever y chain
+        st.write("Configurando retriever y chain de QA...")
+        retriever = vectorstore.as_retriever(
+            search_kwargs={"k": 3}
+        )
+        
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",
@@ -191,12 +191,6 @@ if st.session_state.system_initialized and st.session_state.qa_chain:
         if question:
             try:
                 with st.spinner("🔄 Procesando tu pregunta..."):
-                    # Crear embedding de la pregunta para depuración
-                    embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
-                    question_embedding = embedding_model.embed_query(question)
-                    st.write("✅ Embedding de la pregunta generado correctamente")
-                    
-                    # Obtener respuesta
                     st.write("🔍 Buscando documentos relevantes...")
                     result = st.session_state.qa_chain.invoke({"query": question})
                     
@@ -214,10 +208,6 @@ if st.session_state.system_initialized and st.session_state.qa_chain:
                             with st.expander(f"📄 Fuente {i+1}"):
                                 st.write("Contenido:", doc.page_content)
                                 st.write("Metadata:", doc.metadata)
-                                
-                                # Calcular y mostrar similitud si está disponible
-                                if hasattr(doc, 'similarity'):
-                                    st.write(f"Similitud: {doc.similarity:.2f}")
                     else:
                         st.warning("⚠️ No se encontraron documentos fuente para esta respuesta.")
                         st.write("Esto puede indicar que:")
