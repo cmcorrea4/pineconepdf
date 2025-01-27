@@ -54,11 +54,24 @@ def initialize_rag_system():
             openai_api_key=openai_api_key
         )
         
-        # Inicializar Pinecone y crear vector store
+        # Inicializar Pinecone y obtener el índice
+        pc = Pinecone(api_key=pinecone_api_key)
+        
+        # Si el índice no existe, lo creamos
+        if index_name not in pc.list_indexes().names():
+            pc.create_index(
+                name=index_name,
+                dimension=1536,  # Dimensión para OpenAI embeddings
+                metric='cosine'
+            )
+        
+        # Obtener el índice existente
+        index = pc.Index(index_name)
+
+        # Crear vector store con el índice existente
         vectorstore = PineconeVectorStore.from_existing_index(
             index_name=index_name,
-            embedding=embedding_model,
-            pinecone_api_key=pinecone_api_key
+            embedding=embedding_model
         )
         
         # Crear el retriever
