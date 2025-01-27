@@ -149,74 +149,52 @@ def initialize_rag_system():
         if stats['total_vector_count'] == 0:
             raise Exception("El índice está vacío. No hay documentos para buscar.")
         
-        # Examinar contenido del índice
-        st.write("Examinando contenido del índice...")
+        # Verificar estructura básica del índice
+        st.write("Verificando estructura del índice...")
         
-        # Obtener estadísticas detalladas
+        # Listar todos los namespaces
         stats = index.describe_index_stats()
-        st.write("Estadísticas detalladas del índice:")
-        st.json(stats)
+        st.write("Namespaces disponibles:", list(stats['namespaces'].keys()))
         
-        # Intentar obtener todos los vectores del namespace
-        st.write("Intentando obtener todos los vectores del namespace...")
+        # Realizar una búsqueda simple sin namespace
+        st.write("Probando búsqueda simple sin namespace...")
+        simple_query = "test"
+        query_embedding = embedding_model.embed_query(simple_query)
         
-        # Crear un vector de prueba para fetch_all
-        dummy_vector = [0.0] * 1536  # Vector de ceros del tamaño correcto
-        
-        # Obtener todos los vectores
-        all_vectors = index.query(
-            namespace="Interfaces Multimodales y sus apps",
-            vector=dummy_vector,
-            top_k=100,  # Aumentar para obtener más resultados
-            include_metadata=True,
-            include_values=True
-        )
-        
-        if all_vectors.matches:
-            st.write(f"Se encontraron {len(all_vectors.matches)} vectores")
-            
-            # Mostrar detalles de cada vector
-            for i, match in enumerate(all_vectors.matches):
-                with st.expander(f"Vector {i+1}"):
-                    st.write("ID:", match.id)
-                    if hasattr(match, 'metadata'):
-                        st.write("Metadata:", match.metadata)
-                    if hasattr(match, 'score'):
-                        st.write("Score:", match.score)
-                    # Mostrar primeros elementos del vector si están disponibles
-                    if hasattr(match, 'values') and match.values:
-                        st.write("Primeros 5 elementos del vector:", match.values[:5])
-        else:
-            st.warning("No se encontraron vectores en el namespace")
-        
-        # Probar una búsqueda con una query del dominio
-        test_query = "interfaces multimodales y aplicaciones"
-        query_embedding = embedding_model.embed_query(test_query)
-        
-        st.write("Probando búsqueda con query específica:", test_query)
-        search_response = index.query(
-            namespace="Interfaces Multimodales y sus apps",
+        simple_response = index.query(
             vector=query_embedding,
             top_k=5,
-            include_metadata=True,
-            include_values=True
+            include_metadata=True
         )
         
-        if search_response.matches:
-            st.write("Resultados encontrados:")
-            for i, match in enumerate(search_response.matches):
-                with st.expander(f"Resultado {i+1}"):
-                    st.write("Score:", match.score)
-                    st.write("ID:", match.id)
-                    if hasattr(match, 'metadata'):
-                        st.write("Metadata:", match.metadata)
+        st.write("Resultados de búsqueda simple:", simple_response)
         
-        # Crear vector store con la configuración verificada
+        # Intentar listar los IDs de los vectores
+        st.write("Intentando listar vectores disponibles...")
+        try:
+            # Hacer una búsqueda con score threshold bajo para obtener más resultados
+            all_docs = index.query(
+                vector=[0.1]*1536,  # Vector con valores pequeños
+                top_k=100,  # Máximo número de resultados
+                include_metadata=True,
+                score_threshold=0.0  # Sin threshold de similitud
+            )
+            
+            if all_docs.matches:
+                st.write(f"Vectores encontrados: {len(all_docs.matches)}")
+                for match in all_docs.matches:
+                    st.write(f"ID: {match.id}")
+            else:
+                st.warning("No se encontraron vectores")
+                
+        except Exception as e:
+            st.error(f"Error al listar vectores: {str(e)}")
+        
+        # Crear vector store con configuración básica
         vectorstore = PineconeVectorStore(
             index=index,
             embedding=embedding_model,
-            text_key="text",
-            namespace="Interfaces Multimodales y sus apps"
+            text_key="text"
         )
         
         # Probar una búsqueda simple para verificar la recuperación
