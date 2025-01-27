@@ -28,13 +28,9 @@ with st.sidebar:
         help="Introduce tu API key de Pinecone"
     )
     
-    pinecone_env = st.text_input(
-        "Pinecone Environment",
-        help="Introduce tu ambiente de Pinecone (ej: gcp-starter)"
-    )
-    
     index_name = st.text_input(
         "Nombre del Índice",
+        value="pdf-vector-store",
         help="Introduce el nombre de tu índice en Pinecone"
     )
     
@@ -50,29 +46,33 @@ if 'qa_chain' not in st.session_state:
 # Función para inicializar el sistema RAG
 def initialize_rag_system():
     try:
-        # Configurar OpenAI
-        os.environ["OPENAI_API_KEY"] = openai_api_key
-        
-        # Inicializar Pinecone con la nueva sintaxis
+        # Inicializar Pinecone
         pc = Pinecone(api_key=pinecone_api_key)
+        index = pc.Index(index_name)
         
         # Inicializar embeddings y modelo
-        embeddings = OpenAIEmbeddings()
-        llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+        embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
+        llm = ChatOpenAI(
+            temperature=0,
+            model_name="gpt-3.5-turbo",
+            openai_api_key=openai_api_key
+        )
         
-        # Crear vectorstore con la nueva sintaxis
-        vectorstore = PineconeVectorStore(
-            index_name=index_name,
-            environment=pinecone_env,
-            embedding=embeddings,
+        # Crear vector store
+        vector_store = PineconeVectorStore(
+            index=index,
+            embedding=embedding_model,
             text_key="text"
         )
+        
+        # Crear el retriever
+        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
         
         # Crear chain
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",
-            retriever=vectorstore.as_retriever(search_kwargs={"k": 3}),
+            retriever=retriever,
             return_source_documents=True
         )
         
@@ -83,7 +83,7 @@ def initialize_rag_system():
 
 # Manejar la inicialización del sistema
 if initialize_button:
-    if not openai_api_key or not pinecone_api_key or not pinecone_env or not index_name:
+    if not openai_api_key or not pinecone_api_key:
         st.error("Por favor, completa todos los campos de configuración.")
     else:
         try:
@@ -105,7 +105,7 @@ if st.session_state.system_initialized and st.session_state.qa_chain:
             try:
                 with st.spinner("Procesando tu pregunta..."):
                     # Obtener respuesta
-                    result = st.session_state.qa_chain({"query": question})
+                    result = st.session_state.qa_chain.invoke({"query": question})
                     
                     # Mostrar respuesta
                     st.markdown("### Respuesta:")
