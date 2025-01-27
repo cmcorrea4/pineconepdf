@@ -21,6 +21,14 @@ def get_pinecone_indexes(api_key):
         st.error(f"Error al obtener índices: {str(e)}")
         return []
 
+# Inicializar variables de estado si no existen
+if 'last_refresh' not in st.session_state:
+    st.session_state.last_refresh = time.time()
+if 'available_indexes' not in st.session_state:
+    st.session_state.available_indexes = []
+if 'selected_index' not in st.session_state:
+    st.session_state.selected_index = None
+
 # Sidebar para configuración de credenciales
 with st.sidebar:
     st.markdown("### Configuración de Credenciales")
@@ -39,12 +47,6 @@ with st.sidebar:
         help="Introduce tu API key de Pinecone"
     )
     
-    # Inicializar variables de estado si no existen
-    if 'last_refresh' not in st.session_state:
-        st.session_state.last_refresh = time.time()
-    if 'available_indexes' not in st.session_state:
-        st.session_state.available_indexes = []
-    
     # Sección de gestión de índices
     st.markdown("### Gestión de Índices")
     
@@ -52,8 +54,8 @@ with st.sidebar:
     with col1:
         refresh_button = st.button("🔄 Actualizar Índices")
     
-    # Actualizar lista de índices cuando se presione el botón
-    if refresh_button and pinecone_api_key:
+    # Actualizar lista de índices cuando se presione el botón o cuando se ingrese la API key
+    if (refresh_button or not st.session_state.available_indexes) and pinecone_api_key:
         with st.spinner("Actualizando lista de índices..."):
             st.session_state.available_indexes = get_pinecone_indexes(pinecone_api_key)
             st.session_state.last_refresh = time.time()
@@ -86,21 +88,18 @@ with st.sidebar:
             st.error(f"Error al crear el índice: {str(e)}")
     
     # Selector de índice
-    if pinecone_api_key:
-        if not st.session_state.available_indexes:
-            st.session_state.available_indexes = get_pinecone_indexes(pinecone_api_key)
-        
-        if st.session_state.available_indexes:
-            index_name = st.selectbox(
-                "Selecciona un índice",
-                options=st.session_state.available_indexes,
-                help="Selecciona el índice de Pinecone que quieres usar"
-            )
-        else:
-            st.warning("No hay índices disponibles.")
-            index_name = None
+    if pinecone_api_key and st.session_state.available_indexes:
+        st.markdown("### Índices Disponibles")
+        st.session_state.selected_index = st.selectbox(
+            "Selecciona un índice",
+            options=st.session_state.available_indexes,
+            help="Selecciona el índice de Pinecone que quieres usar"
+        )
+        st.info(f"Índice seleccionado: {st.session_state.selected_index}")
     else:
-        index_name = None
+        if pinecone_api_key:
+            st.warning("No hay índices disponibles.")
+        st.session_state.selected_index = None
     
     # Botón para inicializar el sistema
     initialize_button = st.button("Inicializar Sistema")
@@ -114,6 +113,14 @@ if 'qa_chain' not in st.session_state:
 # Función para inicializar el sistema RAG
 def initialize_rag_system():
     try:
+        if not st.session_state.selected_index:
+            raise Exception("Por favor, selecciona un índice válido.")
+            
+        # Verificar que el índice existe
+        pc = Pinecone(api_key=pinecone_api_key)
+        if st.session_state.selected_index not in pc.list_indexes().names():
+            raise Exception(f"El índice '{st.session_state.selected_index}' no existe.")
+        
         # Inicializar embeddings y modelo
         embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
         llm = ChatOpenAI(
@@ -124,7 +131,7 @@ def initialize_rag_system():
         
         # Crear vector store con el índice existente
         vectorstore = PineconeVectorStore.from_existing_index(
-            index_name=index_name,
+            index_name=st.session_state.selected_index,
             embedding=embedding_model
         )
         
@@ -146,7 +153,7 @@ def initialize_rag_system():
 
 # Manejar la inicialización del sistema
 if initialize_button:
-    if not openai_api_key or not pinecone_api_key or not index_name:
+    if not openai_api_key or not pinecone_api_key:
         st.error("Por favor, completa todos los campos de configuración.")
     else:
         try:
@@ -155,7 +162,7 @@ if initialize_button:
                 st.session_state.system_initialized = True
             st.success("Sistema RAG inicializado correctamente!")
         except Exception as e:
-            st.error(f"Error al inicializar el sistema: {str(e)}")
+            st.error(str(e))
             st.session_state.system_initialized = False
 
 # Interface principal de usuario
@@ -186,17 +193,3 @@ if st.session_state.system_initialized and st.session_state.qa_chain:
             st.warning("Por favor, ingresa una pregunta.")
 else:
     st.info("👈 Por favor, configura las credenciales en el panel lateral e inicializa el sistema para comenzar.")
-
-# Información adicional en el sidebar
-with st.sidebar:
-    st.markdown("---")
-    st.markdown("### Sobre esta aplicación")
-    st.write("""
-    Esta aplicación utiliza RAG (Retrieval Augmented Generation) para responder
-    preguntas basándose en una base de conocimiento almacenada en Pinecone.
-    
-    El sistema:
-    1. Busca información relevante en la base de conocimiento
-    2. Recupera los documentos más similares
-    3. Genera una respuesta utilizando GPT y la información recuperada
-    """)
