@@ -46,10 +46,6 @@ if 'qa_chain' not in st.session_state:
 # Función para inicializar el sistema RAG
 def initialize_rag_system():
     try:
-        # Inicializar Pinecone
-        pc = Pinecone(api_key=pinecone_api_key)
-        index = pc.Index(index_name)
-        
         # Inicializar embeddings y modelo
         embedding_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
         llm = ChatOpenAI(
@@ -58,15 +54,15 @@ def initialize_rag_system():
             openai_api_key=openai_api_key
         )
         
-        # Crear vector store
-        vector_store = PineconeVectorStore(
-            index=index,
+        # Inicializar Pinecone y crear vector store
+        vectorstore = PineconeVectorStore.from_existing_index(
+            index_name=index_name,
             embedding=embedding_model,
-            text_key="text"
+            pinecone_api_key=pinecone_api_key
         )
         
         # Crear el retriever
-        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
         
         # Crear chain
         qa_chain = RetrievalQA.from_chain_type(
