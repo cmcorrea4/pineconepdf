@@ -149,27 +149,74 @@ def initialize_rag_system():
         if stats['total_vector_count'] == 0:
             raise Exception("El índice está vacío. No hay documentos para buscar.")
         
-        # Probar búsqueda directa en Pinecone
-        st.write("Probando búsqueda directa en Pinecone...")
-        test_query = "test query"
+        # Examinar contenido del índice
+        st.write("Examinando contenido del índice...")
+        
+        # Obtener estadísticas detalladas
+        stats = index.describe_index_stats()
+        st.write("Estadísticas detalladas del índice:")
+        st.json(stats)
+        
+        # Intentar obtener todos los vectores del namespace
+        st.write("Intentando obtener todos los vectores del namespace...")
+        
+        # Crear un vector de prueba para fetch_all
+        dummy_vector = [0.0] * 1536  # Vector de ceros del tamaño correcto
+        
+        # Obtener todos los vectores
+        all_vectors = index.query(
+            namespace="Interfaces Multimodales y sus apps",
+            vector=dummy_vector,
+            top_k=100,  # Aumentar para obtener más resultados
+            include_metadata=True,
+            include_values=True
+        )
+        
+        if all_vectors.matches:
+            st.write(f"Se encontraron {len(all_vectors.matches)} vectores")
+            
+            # Mostrar detalles de cada vector
+            for i, match in enumerate(all_vectors.matches):
+                with st.expander(f"Vector {i+1}"):
+                    st.write("ID:", match.id)
+                    if hasattr(match, 'metadata'):
+                        st.write("Metadata:", match.metadata)
+                    if hasattr(match, 'score'):
+                        st.write("Score:", match.score)
+                    # Mostrar primeros elementos del vector si están disponibles
+                    if hasattr(match, 'values') and match.values:
+                        st.write("Primeros 5 elementos del vector:", match.values[:5])
+        else:
+            st.warning("No se encontraron vectores en el namespace")
+        
+        # Probar una búsqueda con una query del dominio
+        test_query = "interfaces multimodales y aplicaciones"
         query_embedding = embedding_model.embed_query(test_query)
         
-        # Realizar búsqueda directa en el índice
+        st.write("Probando búsqueda con query específica:", test_query)
         search_response = index.query(
             namespace="Interfaces Multimodales y sus apps",
             vector=query_embedding,
-            top_k=3,
-            include_metadata=True
+            top_k=5,
+            include_metadata=True,
+            include_values=True
         )
         
-        st.write("Resultados de búsqueda directa:", search_response)
+        if search_response.matches:
+            st.write("Resultados encontrados:")
+            for i, match in enumerate(search_response.matches):
+                with st.expander(f"Resultado {i+1}"):
+                    st.write("Score:", match.score)
+                    st.write("ID:", match.id)
+                    if hasattr(match, 'metadata'):
+                        st.write("Metadata:", match.metadata)
         
-        # Crear vector store después de la prueba
+        # Crear vector store con la configuración verificada
         vectorstore = PineconeVectorStore(
             index=index,
             embedding=embedding_model,
             text_key="text",
-            namespace="Interfaces Multimodales y sus apps"  # Agregar namespace específico
+            namespace="Interfaces Multimodales y sus apps"
         )
         
         # Probar una búsqueda simple para verificar la recuperación
