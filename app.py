@@ -112,7 +112,7 @@ def initialize_rag_system():
         st.write("Inicializando modelos...")
         embedding_model = OpenAIEmbeddings(
             openai_api_key=openai_api_key,
-            model="text-embedding-3-small"
+            model="text-embedding-ada-002"
         )
         
         # Verificar dimensiones del embedding
